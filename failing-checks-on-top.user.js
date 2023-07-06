@@ -24,14 +24,37 @@
   }
 
   function reorderChecks() {
+    moveOnTop("anim-rotate");
     moveOnTop("octicon-skip");
     moveOnTop("octicon-x");
   }
+
+  var config = { childList: true, subtree: true, attributes: true };
+
+  var observer = new MutationObserver(function(mutations) {
+      var lastRemoved = null;
+      mutations.forEach(function(mutation) {
+          console.log(mutation);
+          if (mutation.type === "childList" && mutation.removedNodes.length === 1) {
+              lastRemoved = mutation.removedNodes[0];
+          } else if (mutation.type === "childList" && mutation.addedNodes.length === 1) {
+              var thisRemoved = mutation.addedNodes[0];
+              if (thisRemoved === lastRemoved) {
+                  lastRemoved = null;
+              } else {
+                  reorderChecks();
+              }
+          }
+          //reorderChecks();
+      });
+  });
 
   function maybeWait() {
     if (document.querySelectorAll(".merge-status-item").length === 0) {
       setTimeout(() => maybeWait(), 100);
     } else {
+      let statusList = document.querySelectorAll(".merge-status-list")[0];
+      observer.observe(statusList, config);
       reorderChecks();
     }
   }
